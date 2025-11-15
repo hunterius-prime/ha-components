@@ -10,7 +10,7 @@
 #include "esphome/core/helpers.h"
 
 namespace esphome {
-namespace pipsolar {
+namespace mypipsolar {
 
 enum ENUMPollingCommand {
   POLLING_QPIRI = 0,
@@ -57,7 +57,7 @@ struct QFLAGValues {
   PIPSOLAR_ENTITY_(binary_sensor::BinarySensor, name, polling_command)
 #define PIPSOLAR_TEXT_SENSOR(name, polling_command) PIPSOLAR_ENTITY_(text_sensor::TextSensor, name, polling_command)
 
-class Pipsolar : public uart::UARTDevice, public PollingComponent {
+class MyPipsolar : public uart::UARTDevice, public PollingComponent {
   // QPIGS values
   PIPSOLAR_SENSOR(grid_voltage, QPIGS)
   PIPSOLAR_SENSOR(grid_frequency, QPIGS)
@@ -246,5 +246,5 @@ class Pipsolar : public uart::UARTDevice, public PollingComponent {
   PollingCommand enabled_polling_commands_[POLLING_COMMANDS_MAX];
 };
 
-}  // namespace pipsolar
+}  // namespace mypipsolar
 }  // namespace esphome

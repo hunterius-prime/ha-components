@@ -1,20 +1,20 @@
 #pragma once
 
-#include "../pipsolar.h"
+#include "../mypipsolar.h"
 #include "esphome/components/output/float_output.h"
 #include "esphome/core/component.h"
 
 #include <vector>
 
 namespace esphome {
-namespace pipsolar {
+namespace mypipsolar {
 
-class Pipsolar;
+class MyPipsolar;
 
 class PipsolarOutput : public output::FloatOutput {
  public:
   PipsolarOutput() {}
-  void set_parent(Pipsolar *parent) { this->parent_ = parent; }
+  void set_parent(MyPipsolar *parent) { this->parent_ = parent; }
   void set_set_command(const std::string &command) { this->set_command_ = command; };
   void set_possible_values(std::vector<float> possible_values) { this->possible_values_ = std::move(possible_values); }
   void set_value(float value) { this->write_state(value); };
@@ -22,7 +22,7 @@ class PipsolarOutput : public output::FloatOutput {
  protected:
   void write_state(float state) override;
   std::string set_command_;
-  Pipsolar *parent_;
+  MyPipsolar *parent_;
   std::vector<float> possible_values_;
 };
 

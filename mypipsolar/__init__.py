@@ -10,8 +10,8 @@ MULTI_CONF = True
 
 CONF_PIPSOLAR_ID = "pipsolar_id"
 
-pipsolar_ns = cg.esphome_ns.namespace("pipsolar")
-PipsolarComponent = pipsolar_ns.class_("Pipsolar", cg.Component)
+pipsolar_ns = cg.esphome_ns.namespace("mypipsolar")
+PipsolarComponent = pipsolar_ns.class_("MyPipsolar", cg.Component)
 
 PIPSOLAR_COMPONENT_SCHEMA = cv.Schema(
     {

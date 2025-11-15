@@ -1,25 +1,25 @@
-#include "pipsolar.h"
+#include "mypipsolar.h"
 #include "esphome/core/helpers.h"
 #include "esphome/core/log.h"
 
 namespace esphome {
-namespace pipsolar {
+namespace mypipsolar {
 
-static const char *const TAG = "pipsolar";
+static const char *const TAG = "mypipsolar";
 
-void Pipsolar::setup() {
+void MyPipsolar::setup() {
   this->state_ = STATE_IDLE;
   this->command_start_millis_ = 0;
 }
 
-void Pipsolar::empty_uart_buffer_() {
+void MyPipsolar::empty_uart_buffer_() {
   uint8_t byte;
   while (this->available()) {
     this->read_byte(&byte);
   }
 }
 
-void Pipsolar::loop() {
+void MyPipsolar::loop() {
   // Read message
   if (this->state_ == STATE_IDLE) {
     this->empty_uart_buffer_();
@@ -122,7 +122,7 @@ void Pipsolar::loop() {
     }  // available
   }
   if (this->state_ == STATE_COMMAND) {
-    if (millis() - this->command_start_millis_ > esphome::pipsolar::Pipsolar::COMMAND_TIMEOUT) {
+    if (millis() - this->command_start_millis_ > esphome::mypipsolar::MyPipsolar::COMMAND_TIMEOUT) {
       // command timeout
       const char *command = this->command_queue_[this->command_queue_position_].c_str();
       this->command_start_millis_ = millis();
@@ -134,7 +134,7 @@ void Pipsolar::loop() {
     }
   }
   if (this->state_ == STATE_POLL) {
-    if (millis() - this->command_start_millis_ > esphome::pipsolar::Pipsolar::COMMAND_TIMEOUT) {
+    if (millis() - this->command_start_millis_ > esphome::mypipsolar::MyPipsolar::COMMAND_TIMEOUT) {
       // command timeout
       ESP_LOGD(TAG, "poll %s timeout", this->enabled_polling_commands_[this->last_polling_command_].command);
       this->handle_poll_error_(this->enabled_polling_commands_[this->last_polling_command_].identifier);
@@ -143,14 +143,14 @@ void Pipsolar::loop() {
   }
 }
 
-uint8_t Pipsolar::check_incoming_length_(uint8_t length) {
+uint8_t MyPipsolar::check_incoming_length_(uint8_t length) {
   if (this->read_pos_ - 3 == length) {
     return 1;
   }
   return 0;
 }
 
-uint8_t Pipsolar::check_incoming_crc_() {
+uint8_t MyPipsolar::check_incoming_crc_() {
   uint16_t crc16;
   crc16 = this->pipsolar_crc_(read_buffer_, read_pos_ - 3);
   if (((uint8_t) ((crc16) >> 8)) == read_buffer_[read_pos_ - 3] &&
@@ -167,7 +167,7 @@ uint8_t Pipsolar::check_incoming_crc_() {
 }
 
 // send next command from queue
-bool Pipsolar::send_next_command_() {
+bool MyPipsolar::send_next_command_() {
   uint16_t crc16;
   if (!this->command_queue_[this->command_queue_position_].empty()) {
     const char *command = this->command_queue_[this->command_queue_position_].c_str();
@@ -193,7 +193,7 @@ bool Pipsolar::send_next_command_() {
   return false;
 }
 
-bool Pipsolar::send_next_poll_() {
+bool MyPipsolar::send_next_poll_() {
   uint16_t crc16;
   for (uint8_t i = 0; i < POLLING_COMMANDS_MAX; i++) {
     this->last_polling_command_ = (this->last_polling_command_ + 1) % POLLING_COMMANDS_MAX;
@@ -226,7 +226,7 @@ bool Pipsolar::send_next_poll_() {
   return false;
 }
 
-void Pipsolar::queue_command(const std::string &command) {
+void MyPipsolar::queue_command(const std::string &command) {
   uint8_t next_position = command_queue_position_;
   for (uint8_t i = 0; i < COMMAND_QUEUE_LENGTH; i++) {
     uint8_t testposition = (next_position + i) % COMMAND_QUEUE_LENGTH;
@@ -239,7 +239,7 @@ void Pipsolar::queue_command(const std::string &command) {
   ESP_LOGD(TAG, "Command queue full dropping command: %s", command.c_str());
 }
 
-void Pipsolar::handle_poll_response_(ENUMPollingCommand polling_command, const char *message) {
+void MyPipsolar::handle_poll_response_(ENUMPollingCommand polling_command, const char *message) {
   switch (polling_command) {
     case POLLING_QPIRI:
       handle_qpiri_(message);
@@ -266,12 +266,12 @@ void Pipsolar::handle_poll_response_(ENUMPollingCommand polling_command, const c
       break;
   }
 }
-void Pipsolar::handle_poll_error_(ENUMPollingCommand polling_command) {
+void MyPipsolar::handle_poll_error_(ENUMPollingCommand polling_command) {
   // handlers are designed in a way that an empty message sets all sensors to unknown
   this->handle_poll_response_(polling_command, "");
 }
 
-void Pipsolar::handle_qpiri_(const char *message) {
+void MyPipsolar::handle_qpiri_(const char *message) {
   if (this->last_qpiri_) {
     this->last_qpiri_->publish_state(message);
   }
@@ -354,7 +354,7 @@ void Pipsolar::handle_qpiri_(const char *message) {
   }
 }
 
-void Pipsolar::handle_qpigs_(const char *message) {
+void MyPipsolar::handle_qpigs_(const char *message) {
   if (this->last_qpigs_) {
     this->last_qpigs_->publish_state(message);
   }
@@ -407,7 +407,7 @@ void Pipsolar::handle_qpigs_(const char *message) {
   this->publish_binary_sensor_(this->get_bit_(device_status_2, 2), this->dustproof_installed_);
 }
 
-void Pipsolar::handle_qmod_(const char *message) {
+void MyPipsolar::handle_qmod_(const char *message) {
   std::string mode;
   char device_mode = char(message[1]);
   if (this->last_qmod_) {
@@ -419,7 +419,7 @@ void Pipsolar::handle_qmod_(const char *message) {
   }
 }
 
-void Pipsolar::handle_qflag_(const char *message) {
+void MyPipsolar::handle_qflag_(const char *message) {
   // result like:"(EbkuvxzDajy"
   // get through all char: ignore first "(" Enable flag on 'E', Disable on 'D') else set the corresponding value
   if (this->last_qflag_) {
@@ -478,7 +478,7 @@ void Pipsolar::handle_qflag_(const char *message) {
   this->publish_binary_sensor_(values.power_saving, this->power_saving_);
 }
 
-void Pipsolar::handle_qpiws_(const char *message) {
+void MyPipsolar::handle_qpiws_(const char *message) {
   // '(00000000000000000000000000000000'
   // iterate over all available flag (as not all models have all flags, but at least in the same order)
   if (this->last_qpiws_) {
@@ -647,24 +647,24 @@ void Pipsolar::handle_qpiws_(const char *message) {
   }
 }
 
-void Pipsolar::handle_qt_(const char *message) {
+void MyPipsolar::handle_qt_(const char *message) {
   if (this->last_qt_) {
     this->last_qt_->publish_state(message);
   }
 }
 
-void Pipsolar::handle_qmn_(const char *message) {
+void MyPipsolar::handle_qmn_(const char *message) {
   if (this->last_qmn_) {
     this->last_qmn_->publish_state(message);
   }
 }
 
-void Pipsolar::skip_start_(const char *message, size_t *pos) {
+void MyPipsolar::skip_start_(const char *message, size_t *pos) {
   if (message[*pos] == '(') {
     (*pos)++;
   }
 }
-void Pipsolar::skip_field_(const char *message, size_t *pos) {
+void MyPipsolar::skip_field_(const char *message, size_t *pos) {
   // find delimiter or end of string
   while (message[*pos] != '\0' && message[*pos] != ' ') {
     (*pos)++;
@@ -674,7 +674,7 @@ void Pipsolar::skip_field_(const char *message, size_t *pos) {
     (*pos)++;
   }
 }
-std::string Pipsolar::read_field_(const char *message, size_t *pos) {
+std::string MyPipsolar::read_field_(const char *message, size_t *pos) {
   size_t begin = *pos;
   // find delimiter or end of string
   while (message[*pos] != '\0' && message[*pos] != ' ') {
@@ -694,7 +694,7 @@ std::string Pipsolar::read_field_(const char *message, size_t *pos) {
   return field;
 }
 
-void Pipsolar::read_float_sensor_(const char *message, size_t *pos, sensor::Sensor *sensor) {
+void MyPipsolar::read_float_sensor_(const char *message, size_t *pos, sensor::Sensor *sensor) {
   if (sensor != nullptr) {
     std::string field = this->read_field_(message, pos);
     sensor->publish_state(parse_number<float>(field).value_or(NAN));
@@ -702,7 +702,7 @@ void Pipsolar::read_float_sensor_(const char *message, size_t *pos, sensor::Sens
     this->skip_field_(message, pos);
   }
 }
-void Pipsolar::read_int_sensor_(const char *message, size_t *pos, sensor::Sensor *sensor) {
+void MyPipsolar::read_int_sensor_(const char *message, size_t *pos, sensor::Sensor *sensor) {
   if (sensor != nullptr) {
     std::string field = this->read_field_(message, pos);
     esphome::optional<int32_t> parsed = parse_number<int32_t>(field);
@@ -712,7 +712,7 @@ void Pipsolar::read_int_sensor_(const char *message, size_t *pos, sensor::Sensor
   }
 }
 
-void Pipsolar::publish_binary_sensor_(esphome::optional<bool> b, binary_sensor::BinarySensor *sensor) {
+void MyPipsolar::publish_binary_sensor_(esphome::optional<bool> b, binary_sensor::BinarySensor *sensor) {
   if (sensor) {
     if (b.has_value()) {
       sensor->publish_state(b.value());
@@ -722,14 +722,14 @@ void Pipsolar::publish_binary_sensor_(esphome::optional<bool> b, binary_sensor::
   }
 }
 
-esphome::optional<bool> Pipsolar::get_bit_(std::string bits, uint8_t bit_pos) {
+esphome::optional<bool> MyPipsolar::get_bit_(std::string bits, uint8_t bit_pos) {
   if (bit_pos >= bits.length()) {
     return {};
   }
   return bits[bit_pos] == '1';
 }
 
-void Pipsolar::dump_config() {
+void MyPipsolar::dump_config() {
   ESP_LOGCONFIG(TAG, "Pipsolar:\n"
                      "enabled polling commands:");
   for (auto &enabled_polling_command : this->enabled_polling_commands_) {
@@ -738,7 +738,7 @@ void Pipsolar::dump_config() {
     }
   }
 }
-void Pipsolar::update() {
+void MyPipsolar::update() {
   for (auto &enabled_polling_command : this->enabled_polling_commands_) {
     if (enabled_polling_command.length != 0) {
       enabled_polling_command.needs_update = true;
@@ -746,7 +746,7 @@ void Pipsolar::update() {
   }
 }
 
-void Pipsolar::add_polling_command_(const char *command, ENUMPollingCommand polling_command) {
+void MyPipsolar::add_polling_command_(const char *command, ENUMPollingCommand polling_command) {
   for (auto &enabled_polling_command : this->enabled_polling_commands_) {
     if (enabled_polling_command.length == strlen(command)) {
       uint8_t len = strlen(command);
@@ -770,7 +770,7 @@ void Pipsolar::add_polling_command_(const char *command, ENUMPollingCommand poll
   }
 }
 
-uint16_t Pipsolar::pipsolar_crc_(uint8_t *msg, uint8_t len) {
+uint16_t MyPipsolar::pipsolar_crc_(uint8_t *msg, uint8_t len) {
   uint16_t crc = crc16be(msg, len);
   uint8_t crc_low = crc & 0xff;
   uint8_t crc_high = crc >> 8;

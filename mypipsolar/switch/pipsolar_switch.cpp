@@ -3,7 +3,7 @@
 #include "esphome/core/application.h"
 
 namespace esphome {
-namespace pipsolar {
+namespace mypipsolar {
 
 static const char *const TAG = "pipsolar.switch";
 

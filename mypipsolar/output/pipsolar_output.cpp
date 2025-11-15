@@ -3,7 +3,7 @@
 #include "esphome/core/log.h"
 
 namespace esphome {
-namespace pipsolar {
+namespace mypipsolar {
 
 static const char *const TAG = "pipsolar.output";
 
